@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from 'react';
 import { FoodInput, InputType, AnalysisResult } from './types';
-import { analyzeAntioxidants } from './services/geminiService';
 import CameraModal from './components/CameraModal';
 import AnalysisResultComponent from './components/AnalysisResult';
 
@@ -74,10 +73,21 @@ const App: React.FC = () => {
     setResult(null);
 
     try {
-      const data = await analyzeAntioxidants(inputs, activityGoal);
+      const response = await fetch('/api/geminiService', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ inputs, activityGoal }),
+      });
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Analysis failed');
+      }
+      const data: AnalysisResult = await response.json();
       setResult(data);
     } catch (err) {
-      setError("Analysis failed. Please check your inputs and try again.");
+      setError(err.message || "Analysis failed. Please check your inputs and try again.");
     } finally {
       setIsLoading(false);
     }

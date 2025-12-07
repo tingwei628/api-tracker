@@ -1,3 +1,4 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { FoodInput, AnalysisResult } from "../types";
 
@@ -51,10 +52,21 @@ const RESPONSE_SCHEMA: Schema = {
   required: ["totalScore", "targetScore", "percentage", "deficiencyCategory", "breakdown", "recommendation"]
 };
 
-export const analyzeAntioxidants = async (
-  inputs: FoodInput[],
-  activityGoal: string
-): Promise<AnalysisResult> => {
+export default async function handler(  
+  req: NextApiRequest,
+  res: NextApiResponse<AnalysisResult | { error: string }>
+){
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { inputs, activityGoal } = req.body as { inputs: FoodInput[], activityGoal: string };
+
+  if (!inputs || !activityGoal) {
+    return res.status(400).json({ error: 'Missing inputs or activityGoal' });
+  }
+
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const parts: any[] = [];
@@ -97,10 +109,11 @@ export const analyzeAntioxidants = async (
     const text = response.text;
     if (!text) throw new Error("No response from AI");
     
-    return JSON.parse(text) as AnalysisResult;
-
+    const result = JSON.parse(text) as AnalysisResult;
+    res.status(200).json(result);
+    
   } catch (error) {
     console.error("Gemini Analysis Failed:", error);
-    throw error;
+    res.status(500).json({ error: 'Gemini Analysis Failed' });
   }
 };
