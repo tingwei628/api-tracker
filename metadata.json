@@ -1,0 +1,7 @@
+{
+  "name": "Antioxidant Protection Index Tracker",
+  "description": "An advanced Antioxidant Protection Index analyzer using Gemini 2.5 Flash to quantify nutritional density from photos, labels, and text.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
